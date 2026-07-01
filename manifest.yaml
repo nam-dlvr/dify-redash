@@ -2,7 +2,9 @@ version: 0.1.0
 type: plugin
 author: "community"
 name: redash
-description: "Redash integration plugin for Dify - enables AI agents to query and explore Redash data"
+description:
+  en_US: "Redash integration plugin for Dify - enables AI agents to query and explore Redash data"
+  zh_Hans: "Redash集成插件 - 使AI代理能够查询和探索Redash数据"
 icon: icon.svg
 label:
   en_US: Redash
