@@ -18,7 +18,10 @@ MANIFEST_PATH = os.path.join(os.path.dirname(__file__), "..", "manifest.yaml")
 SEMVER_PATTERN = re.compile(r"^\d+\.\d+\.\d+$")
 
 # Fields that must be non-empty strings with max 256 characters
-REQUIRED_STRING_FIELDS = ["name", "version", "author", "description"]
+REQUIRED_STRING_FIELDS = ["name", "version", "author"]
+
+# Fields that can be either a string or an i18n object (dict with en_US key)
+I18N_OR_STRING_FIELDS = ["description"]
 
 
 def load_manifest():
@@ -55,6 +58,16 @@ class TestManifestStringFields:
                 f"Field '{field}' should be a string, got {type(value).__name__}"
             )
             assert len(value.strip()) > 0, f"Field '{field}' must not be empty or whitespace-only"
+        # Check i18n fields (can be string or dict with en_US)
+        for field in I18N_OR_STRING_FIELDS:
+            value = manifest[field]
+            if isinstance(value, str):
+                assert len(value.strip()) > 0, f"Field '{field}' must not be empty or whitespace-only"
+            elif isinstance(value, dict):
+                assert "en_US" in value, f"Field '{field}' as i18n object must have 'en_US' key"
+                assert len(value["en_US"].strip()) > 0, f"Field '{field}.en_US' must not be empty"
+            else:
+                assert False, f"Field '{field}' should be a string or i18n object, got {type(value).__name__}"
 
     def test_fields_are_within_max_length(self):
         manifest = load_manifest()
@@ -64,6 +77,17 @@ class TestManifestStringFields:
             assert len(value) <= max_length, (
                 f"Field '{field}' exceeds {max_length} characters (length: {len(value)})"
             )
+        for field in I18N_OR_STRING_FIELDS:
+            value = manifest[field]
+            if isinstance(value, str):
+                assert len(value) <= max_length, (
+                    f"Field '{field}' exceeds {max_length} characters (length: {len(value)})"
+                )
+            elif isinstance(value, dict):
+                for locale, text in value.items():
+                    assert len(text) <= max_length, (
+                        f"Field '{field}.{locale}' exceeds {max_length} characters (length: {len(text)})"
+                    )
 
 
 class TestManifestVersion:

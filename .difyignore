@@ -6,3 +6,4 @@ tests
 .difyignore
 pytest.ini
 .gitignore
+.env.example
