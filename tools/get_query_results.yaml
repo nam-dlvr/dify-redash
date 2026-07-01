@@ -1,6 +1,6 @@
 identity:
   name: get_query_results
-  author: community
+  author: namdlvr
   label:
     en_US: Get Query Results
     zh_Hans: 获取查询结果
@@ -19,3 +19,6 @@ parameters:
       en_US: The ID of the Redash query to retrieve cached results for (positive integer)
     llm_description: The unique numeric ID of the Redash query to retrieve cached results for. Must be a positive integer.
     form: llm
+extra:
+  python:
+    source: tools/get_query_results.py

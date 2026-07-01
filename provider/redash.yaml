@@ -1,5 +1,5 @@
 identity:
-  author: community
+  author: namdlvr
   name: redash
   label:
     en_US: Redash
@@ -36,3 +36,6 @@ tools:
   - tools/list_dashboards.yaml
   - tools/get_dashboard_details.yaml
   - tools/list_data_sources.yaml
+extra:
+  python:
+    source: provider/redash.py

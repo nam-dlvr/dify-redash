@@ -1,6 +1,6 @@
 identity:
   name: list_dashboards
-  author: community
+  author: namdlvr
   label:
     en_US: List Dashboards
     zh_Hans: 仪表板列表
@@ -40,3 +40,6 @@ parameters:
       en_US: Filter dashboards by name (case-insensitive substring match, 1-200 characters)
     llm_description: Filter dashboards by name using case-insensitive substring matching. Must be between 1 and 200 characters.
     form: llm
+extra:
+  python:
+    source: tools/list_dashboards.py

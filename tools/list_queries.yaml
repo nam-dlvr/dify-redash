@@ -1,6 +1,6 @@
 identity:
   name: list_queries
-  author: community
+  author: namdlvr
   label:
     en_US: List Queries
     zh_Hans: 查询列表
@@ -30,3 +30,6 @@ parameters:
       en_US: Filter queries by name (case-insensitive substring match)
     llm_description: Filter queries by name using case-insensitive substring matching. Only queries with names containing this text will be returned.
     form: llm
+extra:
+  python:
+    source: tools/list_queries.py

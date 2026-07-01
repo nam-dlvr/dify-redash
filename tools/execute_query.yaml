@@ -1,6 +1,6 @@
 identity:
   name: execute_query
-  author: community
+  author: namdlvr
   label:
     en_US: Execute Query
     zh_Hans: 执行查询
@@ -37,3 +37,6 @@ parameters:
       en_US: Maximum age of cached results in seconds (0 forces fresh execution)
     llm_description: Maximum cache age in seconds. Set to 0 to force a fresh query execution. If not specified, uses Redash default caching.
     form: llm
+extra:
+  python:
+    source: tools/execute_query.py
