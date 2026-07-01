@@ -1,0 +1,39 @@
+identity:
+  name: execute_query
+  author: community
+  label:
+    en_US: Execute Query
+    zh_Hans: 执行查询
+description:
+  human:
+    en_US: Execute a saved Redash query and retrieve results
+    zh_Hans: 执行已保存的Redash查询并获取结果
+  llm: Execute a saved query in Redash by query ID. Supports parameterized queries and cache control via max_age. Returns structured rows with column metadata.
+parameters:
+  - name: query_id
+    type: number
+    required: true
+    label:
+      en_US: Query ID
+    human_description:
+      en_US: The ID of the Redash query to execute (positive integer)
+    llm_description: The unique numeric ID of the Redash query to execute. Must be a positive integer.
+    form: llm
+  - name: parameters
+    type: string
+    required: false
+    label:
+      en_US: Query Parameters
+    human_description:
+      en_US: JSON object of key-value pairs for parameterized queries
+    llm_description: 'JSON string of key-value pairs for query parameters. Example - {"date_start": "2024-01-01", "limit": 100}'
+    form: llm
+  - name: max_age
+    type: number
+    required: false
+    label:
+      en_US: Max Cache Age
+    human_description:
+      en_US: Maximum age of cached results in seconds (0 forces fresh execution)
+    llm_description: Maximum cache age in seconds. Set to 0 to force a fresh query execution. If not specified, uses Redash default caching.
+    form: llm

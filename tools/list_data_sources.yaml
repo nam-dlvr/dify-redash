@@ -1,0 +1,12 @@
+identity:
+  name: list_data_sources
+  author: community
+  label:
+    en_US: List Data Sources
+    zh_Hans: 数据源列表
+description:
+  human:
+    en_US: List available data sources from the connected Redash instance
+    zh_Hans: 列出已连接Redash实例中的可用数据源
+  llm: List all available data sources from the connected Redash instance. Returns data source ID, name, type, and creation date for each configured data source.
+parameters: []

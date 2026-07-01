@@ -1,0 +1,38 @@
+identity:
+  author: community
+  name: redash
+  label:
+    en_US: Redash
+    zh_Hans: Redash
+  description:
+    en_US: Redash data visualization and dashboarding tool integration
+    zh_Hans: Redash数据可视化和仪表板工具集成
+  icon: icon.svg
+credentials_for_provider:
+  redash_url:
+    type: text-input
+    required: true
+    label:
+      en_US: Redash Instance URL
+      zh_Hans: Redash实例URL
+    placeholder:
+      en_US: https://your-redash-instance.example.com
+    help:
+      en_US: The HTTPS URL of your Redash instance (max 2048 characters)
+  api_key:
+    type: secret-input
+    required: true
+    label:
+      en_US: API Key
+      zh_Hans: API密钥
+    placeholder:
+      en_US: Your Redash API key
+    help:
+      en_US: Your Redash user API key for authentication (max 512 characters)
+tools:
+  - tools/list_queries.yaml
+  - tools/execute_query.yaml
+  - tools/get_query_results.yaml
+  - tools/list_dashboards.yaml
+  - tools/get_dashboard_details.yaml
+  - tools/list_data_sources.yaml

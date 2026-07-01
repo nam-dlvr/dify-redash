@@ -1,0 +1,32 @@
+identity:
+  name: list_queries
+  author: community
+  label:
+    en_US: List Queries
+    zh_Hans: 查询列表
+description:
+  human:
+    en_US: List saved queries from the connected Redash instance
+    zh_Hans: 列出已连接Redash实例中的已保存查询
+  llm: List available saved queries from the connected Redash instance with optional filtering and pagination. Returns query ID, name, description, data source, and dates.
+parameters:
+  - name: page_size
+    type: number
+    required: false
+    label:
+      en_US: Page Size
+      zh_Hans: 页面大小
+    human_description:
+      en_US: Number of queries to return (1-250, default 25)
+    llm_description: Number of queries to return per page. Must be between 1 and 250. Defaults to 25 if not specified.
+    form: llm
+  - name: search
+    type: string
+    required: false
+    label:
+      en_US: Search Term
+      zh_Hans: 搜索词
+    human_description:
+      en_US: Filter queries by name (case-insensitive substring match)
+    llm_description: Filter queries by name using case-insensitive substring matching. Only queries with names containing this text will be returned.
+    form: llm

@@ -1,0 +1,42 @@
+identity:
+  name: list_dashboards
+  author: community
+  label:
+    en_US: List Dashboards
+    zh_Hans: 仪表板列表
+description:
+  human:
+    en_US: List dashboards from the connected Redash instance
+    zh_Hans: 列出已连接Redash实例中的仪表板
+  llm: List available dashboards from the connected Redash instance with optional filtering and pagination. Returns dashboard ID, name, slug, and dates.
+parameters:
+  - name: page_size
+    type: number
+    required: false
+    label:
+      en_US: Page Size
+      zh_Hans: 页面大小
+    human_description:
+      en_US: Number of dashboards to return (1-250, default 25)
+    llm_description: Number of dashboards to return per page. Must be between 1 and 250. Defaults to 25 if not specified.
+    form: llm
+  - name: page
+    type: number
+    required: false
+    label:
+      en_US: Page Number
+      zh_Hans: 页码
+    human_description:
+      en_US: Page number for pagination (default 1)
+    llm_description: Page number for pagination. Defaults to 1 if not specified.
+    form: llm
+  - name: search
+    type: string
+    required: false
+    label:
+      en_US: Search Term
+      zh_Hans: 搜索词
+    human_description:
+      en_US: Filter dashboards by name (case-insensitive substring match, 1-200 characters)
+    llm_description: Filter dashboards by name using case-insensitive substring matching. Must be between 1 and 200 characters.
+    form: llm

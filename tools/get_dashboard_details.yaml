@@ -1,0 +1,32 @@
+identity:
+  name: get_dashboard_details
+  author: community
+  label:
+    en_US: Get Dashboard Details
+    zh_Hans: 获取仪表板详情
+description:
+  human:
+    en_US: Retrieve detailed information about a specific Redash dashboard including its widgets
+    zh_Hans: 获取特定Redash仪表板的详细信息，包括其小组件
+  llm: Retrieve detailed information about a specific Redash dashboard by slug, including dashboard metadata and widget details. Optionally includes cached query results for each widget.
+parameters:
+  - name: dashboard_slug
+    type: string
+    required: true
+    label:
+      en_US: Dashboard Slug
+      zh_Hans: 仪表板标识
+    human_description:
+      en_US: The slug identifier of the dashboard to retrieve
+    llm_description: The slug identifier of the dashboard to retrieve. Must be a non-empty string.
+    form: llm
+  - name: include_results
+    type: boolean
+    required: false
+    label:
+      en_US: Include Results
+      zh_Hans: 包含结果
+    human_description:
+      en_US: Whether to include cached query results for each widget (default false)
+    llm_description: Whether to include cached query results for each widget that has an associated query. Defaults to false.
+    form: llm

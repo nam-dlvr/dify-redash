@@ -1,0 +1,21 @@
+identity:
+  name: get_query_results
+  author: community
+  label:
+    en_US: Get Query Results
+    zh_Hans: 获取查询结果
+description:
+  human:
+    en_US: Retrieve cached results for a saved Redash query without re-executing it
+    zh_Hans: 获取已保存Redash查询的缓存结果而不重新执行
+  llm: Retrieve the most recent cached results for a saved Redash query by ID. Returns structured rows with column metadata without triggering a new query execution. Useful for fetching previously computed results quickly.
+parameters:
+  - name: query_id
+    type: number
+    required: true
+    label:
+      en_US: Query ID
+    human_description:
+      en_US: The ID of the Redash query to retrieve cached results for (positive integer)
+    llm_description: The unique numeric ID of the Redash query to retrieve cached results for. Must be a positive integer.
+    form: llm
