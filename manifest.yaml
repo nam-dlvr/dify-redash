@@ -1,6 +1,6 @@
 version: 0.1.0
 type: plugin
-author: community
+author: nam-dlvr
 name: redash
 label:
   en_US: Redash
@@ -21,7 +21,7 @@ plugins:
   tools:
     - provider/redash.yaml
 meta:
-  version: 0.1.0
+  version: 0.0.1
   arch:
     - amd64
     - arm64
