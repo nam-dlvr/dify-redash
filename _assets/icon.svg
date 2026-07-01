@@ -1,7 +1,16 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
-  <rect x="8" y="36" width="10" height="20" rx="2" fill="#4A90D9"/>
-  <rect x="22" y="24" width="10" height="32" rx="2" fill="#357ABD"/>
-  <rect x="36" y="16" width="10" height="40" rx="2" fill="#4A90D9"/>
-  <rect x="50" y="8" width="10" height="48" rx="2" fill="#357ABD"/>
-  <line x1="4" y1="58" x2="62" y2="58" stroke="#333" stroke-width="2" stroke-linecap="round"/>
+  <defs>
+    <linearGradient id="bubble" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#F4795B"/>
+      <stop offset="100%" style="stop-color:#E96B50"/>
+    </linearGradient>
+  </defs>
+  <!-- Speech bubble -->
+  <circle cx="32" cy="28" r="24" fill="url(#bubble)"/>
+  <path d="M20 46 C20 46 24 42 28 42 C28 42 22 52 18 56 C18 56 20 48 20 46Z" fill="url(#bubble)"/>
+  <!-- Bar chart bars (white) -->
+  <rect x="20" y="30" width="5" height="10" rx="1.5" fill="white"/>
+  <circle cx="22.5" cy="28" r="2" fill="white"/>
+  <rect x="29" y="22" width="5" height="18" rx="1.5" fill="white"/>
+  <rect x="38" y="16" width="5" height="24" rx="1.5" fill="white"/>
 </svg>
