@@ -1,6 +1,6 @@
 version: 0.1.0
 type: plugin
-author: nam-dlvr
+author: namdlvr
 name: redash
 label:
   en_US: Redash
