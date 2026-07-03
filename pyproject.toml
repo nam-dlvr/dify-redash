@@ -1,6 +1,6 @@
 [project]
 name = "redash"
-version = "0.1.0"
+version = "0.1.1"
 description = "Redash integration plugin for Dify - enables AI agents to query and explore Redash data"
 readme = "README.md"
 requires-python = ">=3.12"
