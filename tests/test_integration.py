@@ -141,7 +141,10 @@ class TestYamlToolDefinitions:
         params = {p["name"]: p for p in data["parameters"]}
         assert "query_id" in params
         assert params["query_id"]["type"] == "number"
-        assert params["query_id"]["required"] is True
+        assert params["query_id"]["required"] is False
+        assert "job_id" in params
+        assert params["job_id"]["type"] == "string"
+        assert params["job_id"]["required"] is False
 
     def test_list_dashboards_yaml_parameters(self):
         """Verify list_dashboards.yaml parameter types and required flags."""

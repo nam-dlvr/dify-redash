@@ -6,18 +6,27 @@ identity:
     zh_Hans: 获取查询结果
 description:
   human:
-    en_US: Retrieve cached results for a saved Redash query without re-executing it
-    zh_Hans: 获取已保存Redash查询的缓存结果而不重新执行
-  llm: Retrieve the most recent cached results for a saved Redash query by ID. Returns structured rows with column metadata without triggering a new query execution. Useful for fetching previously computed results quickly.
+    en_US: Retrieve query results by polling a job or fetching cached results
+    zh_Hans: 通过轮询作业或获取缓存结果来检索查询结果
+  llm: Retrieve query results from Redash. Use job_id to poll a running query (from execute_query), or query_id to get cached results. When execute_query returns a job_id, pass it here to wait for and retrieve the results.
 parameters:
   - name: query_id
     type: number
-    required: true
+    required: false
     label:
       en_US: Query ID
     human_description:
       en_US: The ID of the Redash query to retrieve cached results for (positive integer)
-    llm_description: The unique numeric ID of the Redash query to retrieve cached results for. Must be a positive integer.
+    llm_description: The unique numeric ID of the Redash query to retrieve cached results for. Use this to get previously cached results without re-executing.
+    form: llm
+  - name: job_id
+    type: string
+    required: false
+    label:
+      en_US: Job ID
+    human_description:
+      en_US: The job ID from execute_query to poll for completion
+    llm_description: The job ID returned by execute_query when a query runs asynchronously. Pass this to poll the job and retrieve results when ready.
     form: llm
 extra:
   python:

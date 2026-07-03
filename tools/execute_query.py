@@ -181,13 +181,16 @@ class ExecuteQueryTool(Tool):
             # Check if the response indicates an error from Redash
             # Redash may return a job object for async queries or an error in the response
             if "job" in response:
-                # The query is still running asynchronously - treat as execution error
-                error = PluginError(
-                    error_code=ErrorCode.QUERY_EXECUTION_ERROR,
-                    message="Query execution is still in progress. The query did not complete within the expected time.",
-                    details={"query_id": query_id, "job_status": response["job"].get("status")},
-                )
-                yield self.create_text_message(json.dumps(format_error_response(error)))
+                # The query is running asynchronously - return job info for polling
+                job = response["job"]
+                result = {
+                    "status": "running",
+                    "message": "Query execution started. Use the job_id with Get Query Results to poll for completion.",
+                    "job_id": job.get("id"),
+                    "job_status": job.get("status"),
+                    "query_id": query_id,
+                }
+                yield self.create_text_message(json.dumps(result))
                 return
 
             # Check for query execution errors in the response

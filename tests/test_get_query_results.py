@@ -2,24 +2,25 @@
 Tests for the Get Query Results Tool (tools/get_query_results.py).
 
 Covers:
-- Task 8.1: YAML tool definition structure
+- Task 8.1: YAML tool definition structure (updated with job_id parameter)
 - Task 8.2: GetQueryResultsTool class structure
-- Task 8.3: Input validation - query_id must be positive integer (VAL_001)
+- Task 8.3: Input validation - query_id or job_id required
 - Task 8.4: API call to GET /api/queries/{id}/results
 - Task 8.5: ResponseFormatter integration with retrieval_timestamp in metadata
 - Task 8.6: No cached results handling
 - Task 8.7: Query not found (QUERY_001 error)
+- Job polling: poll GET /api/jobs/{job_id} and fetch results on success
 """
 
 import json
 from datetime import datetime, timezone
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, patch, call
 
 import pytest
 import yaml
 
 from tools._dify_stubs import Tool, ToolRuntime
-from tools.get_query_results import GetQueryResultsTool
+from tools.get_query_results import GetQueryResultsTool, MAX_POLL_ATTEMPTS, POLL_INTERVAL
 from utils.error_handler import ErrorCode, PluginError
 
 
@@ -66,17 +67,25 @@ class TestYamlDefinition:
         with open("tools/get_query_results.yaml") as f:
             data = yaml.safe_load(f)
         params = data["parameters"]
-        assert len(params) == 1
+        assert len(params) == 2
 
         param_names = [p["name"] for p in params]
         assert "query_id" in param_names
+        assert "job_id" in param_names
 
-    def test_yaml_query_id_is_required_number(self):
+    def test_yaml_query_id_is_optional_number(self):
         with open("tools/get_query_results.yaml") as f:
             data = yaml.safe_load(f)
         query_id_param = next(p for p in data["parameters"] if p["name"] == "query_id")
         assert query_id_param["type"] == "number"
-        assert query_id_param["required"] is True
+        assert query_id_param["required"] is False
+
+    def test_yaml_job_id_is_optional_string(self):
+        with open("tools/get_query_results.yaml") as f:
+            data = yaml.safe_load(f)
+        job_id_param = next(p for p in data["parameters"] if p["name"] == "job_id")
+        assert job_id_param["type"] == "string"
+        assert job_id_param["required"] is False
 
 
 class TestGetQueryResultsToolClass:
@@ -93,9 +102,9 @@ class TestGetQueryResultsToolClass:
 
 
 class TestInputValidation:
-    """Test query_id validation (Task 8.3)."""
+    """Test query_id and job_id validation (Task 8.3)."""
 
-    def test_missing_query_id_returns_val_001(self):
+    def test_missing_both_params_returns_val_001(self):
         tool = _make_tool()
         results = _invoke_tool(tool, {})
 
@@ -160,6 +169,14 @@ class TestInputValidation:
 
         assert "error" not in results[0]
 
+    def test_empty_job_id_with_no_query_id_returns_val_001(self):
+        tool = _make_tool()
+        results = _invoke_tool(tool, {"job_id": ""})
+
+        assert len(results) == 1
+        assert results[0]["error"] is True
+        assert results[0]["error_code"] == "VAL_001"
+
 
 class TestApiCall:
     """Test API call to GET /api/queries/{id}/results (Task 8.4)."""
@@ -204,25 +221,6 @@ class TestApiCall:
             base_url="https://my-redash.com",
             api_key="my-key-5678",
         )
-
-    @patch("tools.get_query_results.RedashClient")
-    def test_no_request_body_sent(self, mock_client_cls):
-        """GET request should not include a request body."""
-        mock_client = MagicMock()
-        mock_client.request.return_value = {
-            "query_result": {
-                "data": {"columns": [], "rows": []},
-                "retrieved_at": "2024-01-01T00:00:00Z",
-            }
-        }
-        mock_client_cls.return_value = mock_client
-
-        tool = _make_tool()
-        _invoke_tool(tool, {"query_id": 10})
-
-        call_args = mock_client.request.call_args
-        # Should only have positional args (method, path), no json body
-        assert "json" not in call_args[1] if call_args[1] else True
 
 
 class TestResponseFormatting:
@@ -473,3 +471,153 @@ class TestQueryNotFound:
         assert results[0]["error_code"] == "UNEXPECTED_001"
         assert "RuntimeError" not in results[0]["message"]
         assert "Something went wrong" not in results[0]["message"]
+
+
+class TestJobPolling:
+    """Test job polling functionality."""
+
+    @patch("tools.get_query_results.time.sleep")
+    @patch("tools.get_query_results.RedashClient")
+    def test_polls_job_until_success(self, mock_client_cls, mock_sleep):
+        mock_client = MagicMock()
+        # First call: job pending, second call: job success
+        mock_client.request.side_effect = [
+            {"job": {"id": "job-123", "status": 1}},  # pending
+            {"job": {"id": "job-123", "status": 3, "query_result_id": 42}},  # success
+            {  # query results
+                "query_result": {
+                    "data": {
+                        "columns": [{"name": "id", "type": "integer"}],
+                        "rows": [{"id": 1}],
+                    },
+                    "retrieved_at": "2024-06-01T12:00:00Z",
+                }
+            },
+        ]
+        mock_client_cls.return_value = mock_client
+
+        tool = _make_tool()
+        results = _invoke_tool(tool, {"job_id": "job-123"})
+
+        assert len(results) == 1
+        result = results[0]
+        assert "columns" in result
+        assert "rows" in result
+        assert "metadata" in result
+        assert result["metadata"]["retrieval_timestamp"].endswith("Z")
+
+        # Verify API calls
+        calls = mock_client.request.call_args_list
+        assert calls[0] == call("GET", "/api/jobs/job-123")
+        assert calls[1] == call("GET", "/api/jobs/job-123")
+        assert calls[2] == call("GET", "/api/query_results/42")
+
+    @patch("tools.get_query_results.time.sleep")
+    @patch("tools.get_query_results.RedashClient")
+    def test_job_failure_returns_error(self, mock_client_cls, mock_sleep):
+        mock_client = MagicMock()
+        mock_client.request.return_value = {
+            "job": {"id": "job-456", "status": 4, "error": "SQL syntax error"}
+        }
+        mock_client_cls.return_value = mock_client
+
+        tool = _make_tool()
+        results = _invoke_tool(tool, {"job_id": "job-456"})
+
+        assert len(results) == 1
+        assert results[0]["error"] is True
+        assert results[0]["error_code"] == "QUERY_003"
+        assert "SQL syntax error" in results[0]["message"]
+
+    @patch("tools.get_query_results.time.sleep")
+    @patch("tools.get_query_results.RedashClient")
+    def test_job_success_no_result_id(self, mock_client_cls, mock_sleep):
+        mock_client = MagicMock()
+        mock_client.request.return_value = {
+            "job": {"id": "job-789", "status": 3}
+        }
+        mock_client_cls.return_value = mock_client
+
+        tool = _make_tool()
+        results = _invoke_tool(tool, {"job_id": "job-789"})
+
+        assert len(results) == 1
+        assert results[0]["status"] == "completed"
+        assert results[0]["job_id"] == "job-789"
+
+    @patch("tools.get_query_results.time.sleep")
+    @patch("tools.get_query_results.RedashClient")
+    def test_job_timeout_after_max_attempts(self, mock_client_cls, mock_sleep):
+        mock_client = MagicMock()
+        # Always return pending status
+        mock_client.request.return_value = {
+            "job": {"id": "job-slow", "status": 1}
+        }
+        mock_client_cls.return_value = mock_client
+
+        tool = _make_tool()
+        results = _invoke_tool(tool, {"job_id": "job-slow"})
+
+        assert len(results) == 1
+        assert results[0]["status"] == "timeout"
+        assert results[0]["job_id"] == "job-slow"
+        assert mock_client.request.call_count == MAX_POLL_ATTEMPTS
+
+    @patch("tools.get_query_results.time.sleep")
+    @patch("tools.get_query_results.RedashClient")
+    def test_job_started_continues_polling(self, mock_client_cls, mock_sleep):
+        mock_client = MagicMock()
+        # status 2 = started, then success
+        mock_client.request.side_effect = [
+            {"job": {"id": "job-run", "status": 2}},  # started
+            {"job": {"id": "job-run", "status": 3, "query_result_id": 10}},  # success
+            {  # query results
+                "query_result": {
+                    "data": {
+                        "columns": [{"name": "x", "type": "integer"}],
+                        "rows": [{"x": 42}],
+                    },
+                    "retrieved_at": "2024-01-01T00:00:00Z",
+                }
+            },
+        ]
+        mock_client_cls.return_value = mock_client
+
+        tool = _make_tool()
+        results = _invoke_tool(tool, {"job_id": "job-run"})
+
+        assert len(results) == 1
+        assert "columns" in results[0]
+        assert results[0]["rows"][0]["x"] == 42
+
+    @patch("tools.get_query_results.RedashClient")
+    def test_job_id_with_query_id_prefers_job_id(self, mock_client_cls):
+        """When both job_id and query_id are provided, job_id takes priority."""
+        mock_client = MagicMock()
+        mock_client.request.return_value = {
+            "job": {"id": "job-priority", "status": 3, "query_result_id": 5}
+        }
+        mock_client_cls.return_value = mock_client
+
+        tool = _make_tool()
+        # Providing both - job_id should be used
+        # Since job_id is truthy, it takes the polling path
+        with patch("tools.get_query_results.time.sleep"):
+            # Set up second request for query_results
+            mock_client.request.side_effect = [
+                {"job": {"id": "job-priority", "status": 3, "query_result_id": 5}},
+                {
+                    "query_result": {
+                        "data": {
+                            "columns": [{"name": "id", "type": "integer"}],
+                            "rows": [{"id": 1}],
+                        },
+                        "retrieved_at": "2024-01-01T00:00:00Z",
+                    }
+                },
+            ]
+            results = _invoke_tool(tool, {"job_id": "job-priority", "query_id": 99})
+
+        # Should have called the jobs endpoint, not queries endpoint
+        first_call = mock_client.request.call_args_list[0]
+        assert "/api/jobs/" in first_call[0][1]

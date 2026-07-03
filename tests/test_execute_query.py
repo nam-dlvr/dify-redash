@@ -504,7 +504,7 @@ class TestErrorHandling:
         assert results[0]["error_code"] == "QUERY_003"
 
     @patch("tools.execute_query.RedashClient")
-    def test_job_response_returns_query_003(self, mock_client_cls):
+    def test_job_response_returns_running_status(self, mock_client_cls):
         mock_client = MagicMock()
         mock_client.request.return_value = {
             "job": {
@@ -518,8 +518,11 @@ class TestErrorHandling:
         results = _invoke_tool(tool, {"query_id": 1})
 
         assert len(results) == 1
-        assert results[0]["error"] is True
-        assert results[0]["error_code"] == "QUERY_003"
+        assert results[0]["status"] == "running"
+        assert results[0]["job_id"] == "abc-123"
+        assert results[0]["job_status"] == 1
+        assert results[0]["query_id"] == 1
+        assert "job_id" in results[0]["message"].lower() or "job" in results[0]["message"].lower()
 
     @patch("tools.execute_query.RedashClient")
     def test_auth_error_propagates(self, mock_client_cls):
